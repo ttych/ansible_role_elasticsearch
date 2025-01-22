@@ -1,0 +1,13 @@
+---
+
+want_elasticsearch: no
+want_kibana: "{{ want_elasticsearch }}"
+
+elasticsearch_name: elasticsearch
+elasticsearch_dir: "/app/{{ elasticsearch_name }}"
+
+elasticsearch_cluster_name: local
+
+elasticsearch_security_node: no
+
+elasticsearch_version: 8.17.1

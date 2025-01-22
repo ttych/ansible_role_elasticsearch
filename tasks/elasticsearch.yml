@@ -1,0 +1,14 @@
+---
+
+- include_tasks: workspace.yml
+  vars:
+    workspace_fs: "{{ elasticsearch_dir }}"
+    workspace_directories: "{{ elasticsearch_directories }}"
+
+- include_tasks: install_elasticsearch.yml
+
+- include_tasks: configure_elasticsearch.yml
+
+- include_tasks: service_elasticsearch.yml
+
+- include_tasks: configure_post_elasticsearch.yml

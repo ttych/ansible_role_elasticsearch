@@ -1,0 +1,8 @@
+---
+
+- block:
+
+    - fail:
+        msg: "self signed ssl not available"
+
+  when: elasticsearch_use_self_signed_ssl

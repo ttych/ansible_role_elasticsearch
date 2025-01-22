@@ -1,0 +1,23 @@
+---
+
+elasticsearch_distfiles: "{{ elasticsearch_dir }}/distfiles"
+elasticsearch_self_signed_ssl_dir: "{{ elasticsearch_dir }}/ssl"
+elasticsearch_credentials_dir: "{{ elasticsearch_dir }}/credentials"
+
+elasticsearch_common_directories:
+  - path: "{{ elasticsearch_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0751"
+  - path: "{{ elasticsearch_distfiles }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0755"
+  - path: "{{ elasticsearch_self_signed_ssl_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0750"
+  - path: "{{ elasticsearch_credentials_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0700"

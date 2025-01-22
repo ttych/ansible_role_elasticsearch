@@ -1,0 +1,52 @@
+---
+
+- name: setup systemd service for elasticsearch
+  block:
+    - name: deploy elasticsearch service
+      template:
+        src: "elasticsearch/systemd/elasticsearch.service"
+        dest: "{{ systemd_system_lib_dir }}/{{ elasticsearch_service_name }}"
+        owner: root
+        group: root
+        mode: "0644"
+      register: t_elasticsearch_service_deploy
+
+    - name: enable elasticsearch service
+      service:
+        name: "{{ elasticsearch_service_name }}"
+        daemon_reload: yes
+        masked: no
+        enabled: yes
+
+    - name: start elasticsearch service
+      service:
+        name: "{{ elasticsearch_service_name }}"
+        state: started
+      register: t_elasticsearch_service_start
+
+    - name: restart elasticsearch service on change
+      service:
+        name: "{{ elasticsearch_service_name }}"
+        state: restarted
+      when:
+        - not t_elasticsearch_service_start.changed
+        - t_elasticsearch_install_update or t_elasticsearch_config_elasticsearch_yml_update or t_elasticsearch_config_jvm_options_update or t_elasticsearch_config_log4j2_properties_update
+      register: t_elasticsearch_service_restart
+
+    - name: delay after start/restart
+      pause:
+        seconds: "{{ elasticsearch_service_delay }}"
+      when: t_elasticsearch_service_start.changed or t_elasticsearch_service_restart.changed
+
+  when: elasticsearch_service_type == 'systemd'
+
+
+
+- name: setup daemontools service for elasticsearch
+  block:
+    - fail:
+        msg: "not implemented"
+
+  when:
+    - elasticsearch_service_type == 'daemontools'
+    - has_daemontools|d(false)

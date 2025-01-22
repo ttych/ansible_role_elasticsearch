@@ -1,0 +1,68 @@
+---
+
+- name: check installed dist
+  stat:
+    path: "{{ elasticsearch_base_dir }}/{{ elasticsearch_dist_name_ver }}/bin/elasticsearch"
+  register: t_elasticsearch_dist_available
+
+- block:
+    - name: check dist version
+      shell:
+        cmd: ./bin/elasticsearch --version | sed -e 's/^Version. \([0-9.]*\),.*$/\1/g'
+      args:
+        chdir: "{{ elasticsearch_base_dir }}/{{ elasticsearch_dist_name_ver }}"
+      changed_when: no
+      register: t_elasticsearch_dist_version
+
+    - name: clean wrong dist
+      file:
+        path: "{{ elasticsearch_base_dir }}/{{ elasticsearch_dist_name_ver }}"
+        state: absent
+      when: t_elasticsearch_dist_version.rc != 0 or t_elasticsearch_dist_version.stdout != elasticsearch_dist_version
+
+  when: t_elasticsearch_dist_available.stat.exists
+
+- block:
+    - name: download elasticsearch distribution
+      get_url:
+        url: "{{ elasticsearch_dist_url }}"
+        dest: "{{ elasticsearch_distfiles }}/{{ elasticsearch_dist_archive }}"
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ elasticsearch_group }}"
+        mode: "0644"
+
+    - name: extract archive
+      unarchive:
+        remote_src: yes
+        src: "{{ elasticsearch_distfiles }}/{{ elasticsearch_dist_archive }}"
+        dest: "{{ elasticsearch_base_dir }}"
+        mode: "go-w"
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ elasticsearch_group }}"
+      register: t_elasticsearch_dist_extract
+
+  when: not t_elasticsearch_dist_available.stat.exists or t_elasticsearch_dist_version.rc != 0 or t_elasticsearch_dist_version.stdout != elasticsearch_dist_version
+
+- name: link to active
+  file:
+    src: "{{ elasticsearch_base_dir }}/{{ elasticsearch_dist_name_ver }}"
+    dest: "{{ elasticsearch_dist_active }}"
+    force: yes
+    state: link
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+  register: t_elasticsearch_dist_active
+
+- name: deploy systemd-entrypoint
+  template:
+    src: elasticsearch/bin/systemd-entrypoint
+    dest: "{{ elasticsearch_dist_systemd_entrypoint }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0755"
+  register: t_elasticsearch_dist_systemd_entrypoint
+
+
+- name: set t_elasticsearch_install_update
+  set_fact:
+    t_elasticsearch_install_update: "{{ t_elasticsearch_dist_extract.changed or t_elasticsearch_dist_active.changed or t_elasticsearch_dist_systemd_entrypoint.changed }}"

@@ -1,0 +1,16 @@
+---
+
+- include_tasks: accounts.yml
+  vars:
+    accounts_groups: "{{ elasticsearch_groups }}"
+    accounts_users: "{{ elasticsearch_users }}"
+
+- include_tasks: workspace.yml
+  vars:
+    workspace_fs: "{{ elasticsearch_dir }}"
+    workspace_directories: "{{ elasticsearch_common_directories }}"
+
+- include_tasks: self_signed_ssl.yml
+
+- include_tasks: internal_users.yml
+  when: elasticsearch_security_node

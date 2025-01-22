@@ -1,0 +1,25 @@
+---
+
+elasticsearch_user: elasticsearch
+elasticsearch_uid: 3116
+elasticsearch_group: "{{ elasticsearch_user }}"
+elasticsearch_gid: "{{ elasticsearch_uid }}"
+elasticsearch_homedir: "/home/{{ elasticsearch_user }}"
+
+elasticsearch_users:
+  - name: "{{ elasticsearch_user }}"
+    comment: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    home: "{{ elasticsearch_homedir }}"
+    shell: /usr/sbin/nologin
+    uid: "{{ elasticsearch_uid }}"
+    home_mode: '0700'
+    password: '*'
+
+elasticsearch_groups:
+  - name: "{{ elasticsearch_group }}"
+    gid: "{{ elasticsearch_gid }}"
+
+
+
+elasticsearch_admin_user: root

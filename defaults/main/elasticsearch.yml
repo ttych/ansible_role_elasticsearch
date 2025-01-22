@@ -1,0 +1,92 @@
+---
+
+elasticsearch_base_dir: "{{ elasticsearch_dir }}/elasticsearch"
+elasticsearch_config_dir: "{{ elasticsearch_base_dir }}/config"
+elasticsearch_config_certs_dir: "{{ elasticsearch_config_dir }}/certs"
+elasticsearch_config_security_dir: "{{ elasticsearch_config_dir }}/elasticsearch-security/"
+elasticsearch_data_dir: "{{ elasticsearch_base_dir }}/data"
+elasticsearch_logs_dir: "{{ elasticsearch_base_dir }}/logs"
+
+elasticsearch_directories:
+  - path: "{{ elasticsearch_base_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0755"
+  - path: "{{ elasticsearch_config_dir }}"
+    owner: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0770"
+  - path: "{{ elasticsearch_data_dir }}"
+    owner: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0750"
+  - path: "{{ elasticsearch_logs_dir }}"
+    owner: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0750"
+  - path: "{{ elasticsearch_config_certs_dir }}"
+    owner: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0750"
+  - path: "{{ elasticsearch_config_security_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ elasticsearch_group }}"
+    mode: "0750"
+
+
+elasticsearch_dist_name: "elasticsearch"
+elasticsearch_dist_version: "{{ elasticsearch_version }}"
+elasticsearch_dist_name_ver: "{{ elasticsearch_dist_name }}-{{ elasticsearch_dist_version }}"
+
+elasticsearch_dist_arch: "{{ ansible_architecture }}"
+elasticsearch_dist_archive: "{{ elasticsearch_dist_name_ver }}-{{ ansible_system | lower }}-{{ elasticsearch_dist_arch }}.tar.gz"
+elasticsearch_dist_url: "https://artifacts.elastic.co/downloads/{{ elasticsearch_dist_name }}/{{ elasticsearch_dist_archive }}"
+elasticsearch_dist_active: "{{ elasticsearch_base_dir }}/{{ elasticsearch_dist_name }}"
+elasticsearch_dist_active_jdk: "{{ elasticsearch_dist_active }}/jdk"
+elasticsearch_dist_systemd_entrypoint: "{{ elasticsearch_dist_active }}/bin/systemd-entrypoint"
+
+
+elasticsearch_config_jvm_options: "{{ elasticsearch_config_dir }}/jvm.options"
+elasticsearch_config_log4j2_properties: "{{ elasticsearch_config_dir }}/log4j2.properties"
+elasticsearch_config_elasticsearch_yml: "{{ elasticsearch_config_dir }}/elasticsearch.yml"
+
+
+elasticsearch_conf_jvm_xms: 4g
+elasticsearch_conf_jvm_xmx: 4g
+elasticsearch_conf_jvm_heap_dump_on_out_of_memory_error: false
+
+elasticsearch_conf_node_name: "{{ ansible_fqdn }}"
+elasticsearch_conf_bootstrap_memory_lock: true
+elasticsearch_conf_network_host: "{{ ansible_fqdn }}"
+elasticsearch_conf_http_host: 0.0.0.0
+elasticsearch_conf_http_port: 9200
+elasticsearch_conf_discovery_type: single-node
+elasticsearch_conf_discovery_seed_hosts: ["127.0.0.1", "[::1]", "{{ ansible_fqdn }}"]
+elasticsearch_conf_cluster_initial_master_nodes: [ "{{ ansible_fqdn }}" ]
+
+elasticsearch_conf_elasticsearch_yml_settings:
+  - { name: "cluster.name", value: "{{ elasticsearch_cluster_name }}" }
+  - { name: "node.name", value: "{{ elasticsearch_conf_node_name }}" }
+  - { name: "path.data", value: "{{ elasticsearch_data_dir }}" }
+  - { name: "path.logs", value: "{{ elasticsearch_logs_dir }}" }
+  - { name: "bootstrap.memory_lock", value: "{{ elasticsearch_conf_bootstrap_memory_lock | ternary('true', 'false') }}" }
+  - { name: "network.host", value: "{{ elasticsearch_conf_network_host }}" }
+  - { name: "http.host", value: "{{ elasticsearch_conf_http_host }}" }
+  - { name: "http.port", value: "{{ elasticsearch_conf_http_port }}" }
+  - { name: "discovery.type", value: "{{ elasticsearch_conf_discovery_type | d(None) }}", state: "{{ ((elasticsearch_conf_discovery_type | d('')) != '') | ternary('present', 'absent') }}" }
+  - { name: "discovery.seed_hosts", value: "{{ elasticsearch_conf_discovery_seed_hosts }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
+  - { name: "cluster.initial_master_nodes", value: "{{ elasticsearch_conf_cluster_initial_master_nodes }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
+
+elasticsearch_conf_jvm_options_settings:
+  - { name: xms, regexp: '^-Xms[0-9]+[gGmM]?$', line: '-Xms{{ elasticsearch_conf_jvm_xms }}' }
+  - { name: xmx, regexp: '^-Xmx[0-9]+[gGmM]?$', line: '-Xmx{{ elasticsearch_conf_jvm_xmx }}' }
+  - { name: HeapDumpOnOutOfMemoryError, regexp: '^-XX:[+-]HeapDumpOnOutOfMemoryError', line: '-XX:{{ elasticsearch_conf_jvm_heap_dump_on_out_of_memory_error | ternary("+", "-") }}HeapDumpOnOutOfMemoryError' }
+  - { name: ErrorFile, regexp: '^-XX:ErrorFile=', line: '-XX:ErrorFile={{ elasticsearch_logs_dir }}/hs_err_pid%p.log' }
+  - { name: Xlog, regexp: '^-Xlog:', line: '-Xlog:gc*,gc+age=trace,safepoint:file={{ elasticsearch_logs_dir }}/gc.log:utctime,pid,tags:filecount=32,filesize=64m' }
+
+elasticsearch_conf_log4j2_properties_settings: []
+
+
+elasticsearch_service_type: "{{ ansible_service_mgr }}"
+elasticsearch_service_name: "{{ elasticsearch_name }}.service"
+elasticsearch_service_delay: 15

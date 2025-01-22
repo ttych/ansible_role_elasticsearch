@@ -1,0 +1,9 @@
+---
+
+elasticsearch_internal_users:
+  - admin
+  - kibanaserver
+  - kibanaro
+  - logstash
+  - readall
+  - snapshotrestore

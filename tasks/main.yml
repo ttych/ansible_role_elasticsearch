@@ -1,0 +1,20 @@
+---
+
+- block:
+
+    - include_tasks: context.yml
+
+    - include_tasks: common.yml
+
+    - include_tasks: elasticsearch.yml
+
+    - include_tasks: kibana.yml
+      when: want_kibana
+
+  when: want_elasticsearch
+
+
+- name: set has_elasticsearch
+  set_fact:
+    has_elasticsearch: "{{ want_elasticsearch }}"
+    has_kibana: "{{ want_kibana }}"
