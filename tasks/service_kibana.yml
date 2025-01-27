@@ -1,0 +1,52 @@
+---
+
+- name: setup systemd service for kibana
+  block:
+    - name: deploy kibana service
+      template:
+        src: "kibana/systemd/kibana.service"
+        dest: "{{ systemd_system_lib_dir }}/{{ kibana_service_name }}"
+        owner: root
+        group: root
+        mode: "0644"
+      register: t_kibana_service_deploy
+
+    - name: enable kibana service
+      service:
+        name: "{{ kibana_service_name }}"
+        daemon_reload: yes
+        masked: no
+        enabled: yes
+
+    - name: start kibana service
+      service:
+        name: "{{ kibana_service_name }}"
+        state: started
+      register: t_kibana_service_start
+
+    - name: restart kibana service on change
+      service:
+        name: "{{ kibana_service_name }}"
+        state: restarted
+      when:
+        - not t_kibana_service_start.changed
+        - t_kibana_config_kibana_yml_update or t_kibana_config_node_options_update or t_kibana_service_deploy.changed
+      register: t_kibana_service_restart
+
+    - name: delay after start/restart
+      pause:
+        seconds: "{{ kibana_service_delay }}"
+      when: t_kibana_service_start.changed or t_kibana_service_restart.changed
+
+  when: kibana_service_type == 'systemd'
+
+
+
+- name: setup daemontools service for kibana
+  block:
+    - fail:
+        msg: "not implemented"
+
+  when:
+    - kibana_service_type == 'daemontools'
+    - has_daemontools|d(false)

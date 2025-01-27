@@ -1,0 +1,35 @@
+[Unit]
+Description=Kibana
+Documentation=https://www.elastic.co
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User={{ kibana_user }}
+Group={{ kibana_group }}
+PrivateTmp=true
+
+Environment=KBN_HOME={{ kibana_dist_active }}
+Environment=KBN_PATH_CONF={{ kibana_config_dir }}
+
+EnvironmentFile=-/etc/default/kibana
+EnvironmentFile=-/etc/sysconfig/kibana
+EnvironmentFile=-{{ kibana_config_dir }}/kibana.env
+
+ExecStart={{ kibana_dist_active }}/bin/kibana
+
+Restart=on-failure
+RestartSec=3
+
+StartLimitBurst=3
+StartLimitInterval=60
+
+RuntimeDirectory={{ kibana_name }}
+WorkingDirectory={{ kibana_base_dir }}
+
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

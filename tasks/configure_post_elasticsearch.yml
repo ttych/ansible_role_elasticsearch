@@ -1,3 +1,5 @@
 ---
 
-# - include_tasks: configure_opensearch_security.yml
+- include_tasks: configure_elasticsearch_builtin_users.yml
+
+- include_tasks: configure_elasticsearch_internal_users.yml

@@ -1,0 +1,37 @@
+---
+
+- name: "stat {{ kibana_config_node_options }}"
+  stat:
+    path: "{{ kibana_config_node_options }}"
+  register: t_kibana_config_node_options
+
+- block:
+
+    - name: init node.options
+      copy:
+        src: "{{ kibana_dist_active }}/config/node.options"
+        dest: "{{ kibana_config_node_options }}"
+        remote_src: yes
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ kibana_group }}"
+        mode: "0640"
+      register: t_kibana_config_node_options_init
+
+  when: not t_kibana_config_node_options.stat.exists
+
+
+- name: update node.options
+  lineinfile:
+    path: "{{ kibana_config_node_options }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state | d('present') }}"
+    backrefs: "{{ item.backrefs | d(false) }}"
+  loop: "{{ kibana_conf_node_options_settings }}"
+  register: t_kibana_config_node_options_settings
+
+
+
+- name: set t_kibana_config_node_options_update
+  set_fact:
+    t_kibana_config_node_options_update: "{{ t_kibana_config_node_options_init.changed or t_kibana_config_node_options_settings.changed }}"

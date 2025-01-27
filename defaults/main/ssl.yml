@@ -1,0 +1,4 @@
+---
+
+elasticsearch_ssl: yes
+elasticsearch_ssl_use_self_signed: no

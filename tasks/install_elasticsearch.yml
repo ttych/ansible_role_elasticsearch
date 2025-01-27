@@ -63,6 +63,7 @@
   register: t_elasticsearch_dist_systemd_entrypoint
 
 
+
 - name: set t_elasticsearch_install_update
   set_fact:
     t_elasticsearch_install_update: "{{ t_elasticsearch_dist_extract.changed or t_elasticsearch_dist_active.changed or t_elasticsearch_dist_systemd_entrypoint.changed }}"

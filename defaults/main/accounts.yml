@@ -21,5 +21,36 @@ elasticsearch_groups:
     gid: "{{ elasticsearch_gid }}"
 
 
+kibana_user: "{{ kibana_name }}"
+kibana_uid: 3117
+kibana_group: "{{ kibana_user }}"
+kibana_gid: "{{ kibana_uid }}"
+kibana_homedir: "/home/{{ kibana_user }}"
+
+kibana_users:
+  - name: "{{ elasticsearch_user }}"
+    comment: "{{ elasticsearch_user }}"
+    group: "{{ elasticsearch_group }}"
+    home: "{{ elasticsearch_homedir }}"
+    shell: /usr/sbin/nologin
+    uid: "{{ elasticsearch_uid }}"
+    home_mode: '0700'
+    password: '*'
+  - name: "{{ kibana_user }}"
+    comment: "{{ kibana_user }}"
+    group: "{{ kibana_group }}"
+    home: "{{ kibana_homedir }}"
+    shell: /usr/sbin/nologin
+    uid: "{{ kibana_uid }}"
+    home_mode: '0700'
+    password: '*'
+
+kibana_groups:
+  - name: "{{ elasticsearch_group }}"
+    gid: "{{ elasticsearch_gid }}"
+  - name: "{{ kibana_group }}"
+    gid: "{{ kibana_gid }}"
+
+
 
 elasticsearch_admin_user: root

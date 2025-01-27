@@ -1,1 +1,83 @@
 ---
+
+kibana_name: kibana
+
+kibana_service_dns: kibana.local
+
+kibana_base_dir: "{{ elasticsearch_dir }}/kibana"
+kibana_config_dir: "{{ kibana_base_dir }}/config"
+kibana_config_certs_dir: "{{ kibana_config_dir }}/certs"
+kibana_data_dir: "{{ kibana_base_dir }}/data"
+
+kibana_pid_file: "/var/run/{{ kibana_name }}/kibana.pid"
+
+kibana_directories:
+  - path: "{{ kibana_base_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ kibana_group }}"
+    mode: "0755"
+  - path: "{{ kibana_config_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ kibana_group }}"
+    mode: "0770"
+  - path: "{{ kibana_config_certs_dir }}"
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ kibana_group }}"
+    mode: "0750"
+  - path: "{{ kibana_data_dir }}"
+    owner: "{{ kibana_user }}"
+    group: "{{ kibana_group }}"
+    mode: "0750"
+
+
+kibana_dist_name: "kibana"
+kibana_dist_version: "{{ elasticsearch_dist_version }}"
+kibana_dist_name_ver: "{{ kibana_dist_name }}-{{ kibana_dist_version }}"
+
+kibana_dist_arch: "{{ ansible_architecture }}"
+kibana_dist_archive: "{{ kibana_dist_name_ver }}-{{ ansible_system | lower }}-{{ kibana_dist_arch }}.tar.gz"
+kibana_dist_url: "https://artifacts.elastic.co/downloads/{{ kibana_dist_name }}/{{ kibana_dist_archive }}"
+
+kibana_dist_active: "{{ kibana_base_dir }}/{{ kibana_dist_name }}"
+kibana_dist_active_nodejs: "{{ kibana_dist_active }}/node"
+
+kibana_config_kibana_yml: "{{ kibana_config_dir }}/kibana.yml"
+kibana_config_node_options: "{{ kibana_config_dir }}/node.options"
+
+kibana_conf_node_fqdn: "{{ ansible_fqdn }}"
+kibana_conf_server_port: 5601
+kibana_conf_server_host: 0.0.0.0
+kibana_conf_server_basePath: ""
+kibana_conf_server_rewriteBasePath: false
+kibana_conf_server_maxPayloadBytes: 1048576
+kibana_conf_server_name: "{{ kibana_conf_node_fqdn }}"
+kibana_conf_elasticsearch_hosts:
+  - "https://localhost:{{ elasticsearch_conf_http_port }}"
+  - "https://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}"
+kibana_conf_elasticsearch_username: kibana_system
+kibana_conf_elasticsearch_password: "{{ elasticsearch_user_kibana_system_password }}"
+kibana_conf_logging_root_level: info
+kibana_conf_i18n_locale: en
+kibana_conf_telemetry_optin: false
+
+kibana_conf_kibana_yml_settings:
+  - { name: "server.port", value: "{{ kibana_conf_server_port }}" }
+  - { name: "server.host", value: "{{ kibana_conf_server_host }}" }
+  - { name: "server.basePath", value: "\"{{ kibana_conf_server_basePath }}\"", state: "{{ (kibana_conf_server_basePath == '') | ternary('absent', 'present') }}" }
+  - { name: "server.rewriteBasePath", value: "{{ kibana_conf_server_rewriteBasePath | ternary('true', 'false') }}" }
+  - { name: "server.maxPayloadBytes", value: "{{ kibana_conf_server_maxPayloadBytes }}" }
+  - { name: "server.name", value: "{{ kibana_conf_server_name }}" }
+  - { name: "elasticsearch.hosts", value: "{{ kibana_conf_elasticsearch_hosts }}" }
+  - { name: "elasticsearch.username", value: "{{ kibana_conf_elasticsearch_username }}" }
+  - { name: "elasticsearch.password", value: "{{ kibana_conf_elasticsearch_password }}" }
+  - { name: "logging.root.level", value: "{{ kibana_conf_logging_root_level }}" }
+  - { name: "pid.file", value: "{{ kibana_pid_file }}" }
+  - { name: "path.data", value: "{{ kibana_data_dir }}" }
+  - { name: "i18n.locale", value: "{{ kibana_conf_i18n_locale }}" }
+  - { name: "telemetry.optIn", value: "{{ kibana_conf_telemetry_optin | ternary('true', 'false') }}" }
+
+kibana_conf_node_options_settings: []
+
+kibana_service_type: "{{ elasticsearch_service_type }}"
+kibana_service_name: "{{ kibana_name }}.service"
+kibana_service_delay: 15

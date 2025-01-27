@@ -1,9 +1,52 @@
 ---
 
+elasticsearch_internal_roles:
+  - name: admin
+    body:
+      cluster:
+      - all
+      indices:
+      - names:
+        - "*"
+        privileges:
+        - all
+        allow_restricted_indices: false
+      applications:
+      - application: kibana-.kibana
+        privileges:
+        - all
+        resources:
+        - "*"
+      run_as:
+      - "*"
+      metadata: {}
+      transient_metadata:
+        enabled: true
+      description: admin
+
+  - name: admin
+    body:
+      cluster:
+        - "all"  # Full cluster access
+      indices:
+        - names: ["*"]  # Access to all indices
+          privileges:
+            - "read"
+            - "write"
+            - "create_index"
+            - "delete"
+            - "manage"
+      applications:
+        - application: "kibana-*"
+          privileges: ["all"]
+          resources: ["*"]  # Full access to Kibana resources
+      run_as: ["*"]  # Allows impersonating any user
+      metadata:
+        description: "Administrative role with full access to the cluster, indices, and Kibana"
+
 elasticsearch_internal_users:
-  - admin
-  - kibanaserver
-  - kibanaro
-  - logstash
-  - readall
-  - snapshotrestore
+  - username: "admin"
+    body:
+      password: "{{ elasticsearch_internal_user_admin_password }}"
+      roles: ["admin"]
+      full_name: "admin"

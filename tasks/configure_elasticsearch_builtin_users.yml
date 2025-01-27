@@ -1,0 +1,63 @@
+---
+
+- block:
+
+    - name: check if builtin users initialized
+      stat:
+        path: "{{ elasticsearch_credentials_dir }}/init"
+      register: t_elasticsearch_builtin_users_init
+
+    - block:
+
+        - name: init builtin users
+          shell:
+            cmd: "echo 'y' | {{ elasticsearch_dist_active }}/bin/elasticsearch-setup-passwords auto --batch"
+          environment:
+            ES_PATH_CONF: "{{ elasticsearch_config_dir }}"
+          register: t_elasticsearch_builtin_users_init_content
+
+
+        - name: extract builtin init users-passwords
+          set_fact:
+            t_elasticsearch_builtin_init_users_passwords: "{{ t_elasticsearch_builtin_users_init_content.stdout | regex_findall('PASSWORD (\\w+) = (\\S+)') }}"
+
+        - name: save builtin init users-passwords
+          copy:
+            content: "{{ item[1] }}"
+            dest: "{{ elasticsearch_credentials_dir }}/{{ item[0] }}.password"
+            mode: "0600"
+            owner: "{{ elasticsearch_admin_user }}"
+            group: "{{ elasticsearch_group }}"
+          loop: "{{ t_elasticsearch_builtin_init_users_passwords }}"
+          loop_control:
+            label: "{{ item[0] }}"
+
+        - name: set init flag
+          file:
+            path: "{{ elasticsearch_credentials_dir }}/init"
+            state: touch
+            mode: "0600"
+
+      when: not t_elasticsearch_builtin_users_init.stat.exists
+
+
+    - name: list available builtin credentials
+      find:
+        paths: "{{ elasticsearch_credentials_dir }}"
+        patterns: "*.password"
+        file_type: file
+      register: t_elasticsearch_builtin_users_credentials
+
+    - name: load builtin credentials
+      slurp:
+        src: "{{ item.path }}"
+      loop: "{{ t_elasticsearch_builtin_users_credentials.files }}"
+      register: t_elasticsearch_builtin_users_credentials_contents
+
+    - name: load available builtin credentials
+      set_fact:
+        "{{ 'elasticsearch_user_' + (item.item.path | basename | splitext | first) + '_password' }}": "{{ item.content | b64decode | trim }}"
+      loop: "{{ t_elasticsearch_builtin_users_credentials_contents.results }}"
+
+
+  when: elasticsearch_security_node or (elasticsearch_conf_discovery_type == 'single-node')

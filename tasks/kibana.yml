@@ -1,2 +1,17 @@
 ---
 
+- include_tasks: accounts.yml
+  vars:
+    accounts_groups: "{{ kibana_groups }}"
+    accounts_users: "{{ kibana_users }}"
+
+- include_tasks: workspace.yml
+  vars:
+    workspace_fs: "{{ opensearch_dir }}"
+    workspace_directories: "{{ kibana_directories }}"
+
+- include_tasks: install_kibana.yml
+
+- include_tasks: configure_kibana.yml
+
+- include_tasks: service_kibana.yml

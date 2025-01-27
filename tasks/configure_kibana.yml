@@ -1,0 +1,7 @@
+---
+
+- include_tasks: configure_kibana_yml.yml
+
+- include_tasks: configure_kibana_node_options.yml
+
+- include_tasks: configure_kibana_certs.yml

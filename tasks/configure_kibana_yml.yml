@@ -1,0 +1,38 @@
+---
+
+- name: "stat {{ kibana_config_kibana_yml }}"
+  stat:
+    path: "{{ kibana_config_kibana_yml }}"
+  register: t_kibana_config_kibana_yml_file
+
+- block:
+    - name: init kibana.yml
+      copy:
+        src: "{{ kibana_dist_active }}/config/kibana.yml"
+        dest: "{{ kibana_config_kibana_yml }}"
+        remote_src: yes
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ kibana_group }}"
+        mode: "0640"
+      register: t_kibana_config_kibana_yml_init
+
+  when: not t_kibana_config_kibana_yml_file.stat.exists
+
+
+- name: update kibana.yml
+  lineinfile:
+    path: "{{ kibana_config_kibana_yml }}"
+    regexp: "^{{ item.name }}:"
+    line: "{{ item.name }}: {{ item.value }}"
+    state: "{{ item.state | d('present') }}"
+    backrefs: "{{ item.backrefs | d(false) }}"
+    insertafter: "{{ item.insertafter | d('^#\\s*' + item.name + ':') }}"
+  when: item.state is defined or (item.value is not none and item.value is not false)
+  loop: "{{ kibana_conf_kibana_yml_settings }}"
+  register: t_kibana_config_kibana_yml_settings
+
+
+
+- name: set t_kibana_config_kibana_yml_update
+  set_fact:
+    t_kibana_config_kibana_yml_update: "{{ t_kibana_config_kibana_yml_init.changed or t_kibana_config_kibana_yml_settings.changed }}"

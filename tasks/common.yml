@@ -11,6 +11,3 @@
     workspace_directories: "{{ elasticsearch_common_directories }}"
 
 - include_tasks: self_signed_ssl.yml
-
-- include_tasks: internal_users.yml
-  when: elasticsearch_security_node

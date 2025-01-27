@@ -1,0 +1,65 @@
+---
+
+- name: check installed dist
+  stat:
+    path: "{{ kibana_base_dir }}/{{ kibana_dist_name_ver }}/bin/kibana"
+  register: t_kibana_dist_available
+
+
+- block:
+    - name: check dist version
+      shell:
+        cmd: ./bin/kibana --version | tail -1
+      args:
+        chdir: "{{ kibana_base_dir }}/{{ kibana_dist_name_ver }}"
+      changed_when: no
+      become: yes
+      become_user: "{{ kibana_user }}"
+      register: t_kibana_dist_version
+
+    - name: clean wrong dist
+      file:
+        path: "{{ kibana_base_dir }}/{{ kibana_dist_name_ver }}"
+        state: absent
+      when: t_kibana_dist_version.rc != 0 or t_kibana_dist_version.stdout != kibana_dist_version
+
+  when: t_kibana_dist_available.stat.exists
+
+
+- block:
+    - name: "download {{ kibana_dist_name }}"
+      get_url:
+        url: "{{ kibana_dist_url }}"
+        dest: "{{ elasticsearch_distfiles }}/{{ kibana_dist_archive }}"
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ kibana_group }}"
+        mode: "0644"
+
+    - name: extract archive
+      unarchive:
+        remote_src: yes
+        src: "{{ elasticsearch_distfiles }}/{{ kibana_dist_archive }}"
+        dest: "{{ kibana_base_dir }}"
+        mode: "go-w"
+        owner: "{{ elasticsearch_admin_user }}"
+        group: "{{ kibana_group }}"
+      register: t_kibana_dist_extract
+
+  when: not t_kibana_dist_available.stat.exists or t_kibana_dist_version.rc != 0 or t_kibana_dist_version.stdout != elasticsearch_dist_version
+
+
+- name: link to active
+  file:
+    src: "{{ kibana_base_dir }}/{{kibana_dist_name_ver }}"
+    dest: "{{ kibana_dist_active }}"
+    force: yes
+    state: link
+    owner: "{{ elasticsearch_admin_user }}"
+    group: "{{ kibana_group }}"
+  register: t_kibana_dist_active
+
+
+
+- name: set t_kibana_install_update
+  set_fact:
+    t_kibana_install_update: "{{ t_kibana_dist_extract.changed or t_kibana_dist_active.changed }}"

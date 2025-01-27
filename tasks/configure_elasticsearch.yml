@@ -7,5 +7,3 @@
 - include_tasks: configure_elasticsearch_log4j2.yml
 
 - include_tasks: configure_elasticsearch_plugins.yml
-
-- include_tasks: configure_elasticsearch_users.yml

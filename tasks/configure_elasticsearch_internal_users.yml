@@ -1,0 +1,33 @@
+---
+
+- block:
+
+    - name: ensure elasticsearch internal roles
+      ansible.builtin.uri:
+        url: "https://{{ elasticsearch_conf_node_fqdn }}:9200/_security/role/{{ item.name }}"
+        method: put
+        body: "{{ item.body | to_json }}"
+        user: "elastic"
+        password: "{{ elasticsearch_user_elastic_password }}"
+        headers:
+          content-type: "application/json"
+        validate_certs: false
+      with_items: "{{ elasticsearch_internal_roles }}"
+      register: t_elasticsearch_internal_roles_result
+      failed_when: t_elasticsearch_internal_roles_result.status not in [200, 201]
+
+    - name: ensure elasticsearch internal users
+      ansible.builtin.uri:
+        url: "https://{{ elasticsearch_conf_node_fqdn }}:9200/_security/user/{{ item.username }}"
+        method: put
+        body: "{{ item.body | to_json }}"
+        user: "elastic"
+        password: "{{ elasticsearch_user_elastic_password }}"
+        headers:
+          content-type: "application/json"
+        validate_certs: false
+      with_items: "{{ elasticsearch_internal_users }}"
+      register: t_elasticsearch_internal_users_result
+      failed_when: t_elasticsearch_internal_users_result.status not in [200, 201]
+
+  when: elasticsearch_security_node or (elasticsearch_conf_discovery_type == 'single-node')
