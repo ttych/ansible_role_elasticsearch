@@ -1,0 +1,33 @@
+---
+
+- name: "Ensure ILM policies exist"
+  uri:
+    url: "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}/_ilm/policy/{{ item.name }}"
+    method: PUT
+    user: "elastic"
+    password: "{{ elasticsearch_user_elastic_password }}"
+    body_format: json
+    body: "{{ item.body | to_json }}"
+    headers:
+      Content-Type: "application/json"
+    validate_certs: "{{ elasticsearch_post_validate_certs }}"
+    status_code: [200, 201]
+  loop: "{{ elasticsearch_ilm_policies }}"
+  no_log: "{{ elasticsearch_post_no_log }}"
+  register: t_elasticsearch_ilm_policies_result
+
+- name: "Ensure index templates exist"
+  uri:
+    url: "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}/_index_template/{{ item.name }}"
+    method: PUT
+    user: "elastic"
+    password: "{{ elasticsearch_user_elastic_password }}"
+    body_format: json
+    body: "{{ item.body | to_json }}"
+    headers:
+      Content-Type: "application/json"
+    validate_certs: "{{ elasticsearch_post_validate_certs }}"
+    status_code: [200, 201]
+  loop: "{{ elasticsearch_index_templates }}"
+  no_log: "{{ elasticsearch_post_no_log }}"
+  register: t_elasticsearch_index_templates_result

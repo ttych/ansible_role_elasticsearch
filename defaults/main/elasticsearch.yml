@@ -55,12 +55,20 @@ elasticsearch_conf_jvm_xms: 4g
 elasticsearch_conf_jvm_xmx: 4g
 elasticsearch_conf_jvm_heap_dump_on_out_of_memory_error: false
 
+elasticsearch_conf_scheme: "{{ elasticsearch_ssl | ternary('https', 'http') }}"
 elasticsearch_conf_node_name: "{{ ansible_fqdn }}"
 elasticsearch_conf_node_fqdn: "{{ ansible_fqdn }}"
+elasticsearch_conf_node_roles:
+  - master
+  - data
+  - ingest
+  - transform
 elasticsearch_conf_bootstrap_memory_lock: true
 elasticsearch_conf_network_host: "{{ elasticsearch_conf_node_fqdn }}"
 elasticsearch_conf_http_host: 0.0.0.0
 elasticsearch_conf_http_port: 9200
+elasticsearch_conf_transport_host: "{{ (elasticsearch_conf_discovery_type == 'single-node') | ternary('127.0.0.1', '0.0.0.0') }}"
+elasticsearch_conf_transport_port: 9300
 elasticsearch_conf_discovery_type: single-node
 elasticsearch_conf_discovery_seed_hosts: ["127.0.0.1", "[::1]", "{{ ansible_fqdn }}"]
 elasticsearch_conf_cluster_initial_master_nodes: [ "{{ ansible_fqdn }}" ]
@@ -69,16 +77,21 @@ elasticsearch_conf_xpack_enabled: true
 elasticsearch_conf_elasticsearch_yml_settings:
   - { name: "cluster.name", value: "{{ elasticsearch_cluster_name }}" }
   - { name: "node.name", value: "{{ elasticsearch_conf_node_name }}" }
+  - { name: "node.roles", value: "{{ elasticsearch_conf_node_roles }}" }
   - { name: "path.data", value: "{{ elasticsearch_data_dir }}" }
   - { name: "path.logs", value: "{{ elasticsearch_logs_dir }}" }
   - { name: "bootstrap.memory_lock", value: "{{ elasticsearch_conf_bootstrap_memory_lock | ternary('true', 'false') }}" }
   - { name: "network.host", value: "{{ elasticsearch_conf_network_host }}" }
   - { name: "http.host", value: "{{ elasticsearch_conf_http_host }}" }
   - { name: "http.port", value: "{{ elasticsearch_conf_http_port }}" }
+  - { name: "transport.host", value: "{{ elasticsearch_conf_transport_host }}" }
+  - { name: "transport.port", value: "{{ elasticsearch_conf_transport_port }}" }
   - { name: "discovery.type", value: "{{ elasticsearch_conf_discovery_type | d(None) }}", state: "{{ ((elasticsearch_conf_discovery_type | d('')) != '') | ternary('present', 'absent') }}" }
   - { name: "discovery.seed_hosts", value: "{{ elasticsearch_conf_discovery_seed_hosts }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
   - { name: "cluster.initial_master_nodes", value: "{{ elasticsearch_conf_cluster_initial_master_nodes }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
   - { name: "xpack.security.enabled", value: "{{ elasticsearch_conf_xpack_enabled | ternary('true', 'false') }}" }
+  - { name: "xpack.security.transport.ssl.enabled", value: "{{ elasticsearch_conf_xpack_enabled | ternary('true', 'false') }}" }
+  - { name: "xpack.security.http.ssl.enabled", value: "{{ (elasticsearch_conf_xpack_enabled and elasticsearch_ssl) | ternary('true', 'false') }}" }
 
 elasticsearch_conf_jvm_options_settings:
   - { name: xms, regexp: '^-Xms[0-9]+[gGmM]?$', line: '-Xms{{ elasticsearch_conf_jvm_xms }}' }

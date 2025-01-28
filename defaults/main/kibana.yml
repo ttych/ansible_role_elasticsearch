@@ -44,16 +44,17 @@ kibana_dist_active_nodejs: "{{ kibana_dist_active }}/node"
 kibana_config_kibana_yml: "{{ kibana_config_dir }}/kibana.yml"
 kibana_config_node_options: "{{ kibana_config_dir }}/node.options"
 
+kibana_conf_scheme: "{{ kibana_ssl | ternary('https', 'http') }}"
 kibana_conf_node_fqdn: "{{ ansible_fqdn }}"
-kibana_conf_server_port: 5601
 kibana_conf_server_host: 0.0.0.0
+kibana_conf_server_port: 5601
 kibana_conf_server_basePath: ""
 kibana_conf_server_rewriteBasePath: false
 kibana_conf_server_maxPayloadBytes: 1048576
 kibana_conf_server_name: "{{ kibana_conf_node_fqdn }}"
 kibana_conf_elasticsearch_hosts:
-  - "https://localhost:{{ elasticsearch_conf_http_port }}"
-  - "https://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}"
+  - "{{ elasticsearch_conf_scheme }}://localhost:{{ elasticsearch_conf_http_port }}"
+  - "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}"
 kibana_conf_elasticsearch_username: kibana_system
 kibana_conf_elasticsearch_password: "{{ elasticsearch_user_kibana_system_password }}"
 kibana_conf_logging_root_level: info

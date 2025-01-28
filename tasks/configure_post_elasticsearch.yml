@@ -3,3 +3,5 @@
 - include_tasks: configure_elasticsearch_builtin_users.yml
 
 - include_tasks: configure_elasticsearch_internal_users.yml
+
+- include_tasks: configure_elasticsearch_indices.yml
