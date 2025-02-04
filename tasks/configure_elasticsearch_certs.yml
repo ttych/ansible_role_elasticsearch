@@ -1,0 +1,59 @@
+---
+
+- block:
+
+    - block:
+
+        - name: deploy elasticsearch transport certificate
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            owner: "{{ elasticsearch_user }}"
+            group: "{{ elasticsearch_group }}"
+            mode: "0400"
+          loop:
+            - dest: "{{ elasticsearch_config_transport_cert }}"
+              content: "{{ elasticsearch_certificate_transport['certificate'] }}"
+            - dest: "{{ elasticsearch_config_transport_key }}"
+              content: "{{ elasticsearch_certificate_transport['key'] }}"
+            - dest: "{{ elasticsearch_config_transport_ca_cert }}"
+              content: "{{ elasticsearch_certificate_transport_ca['certificate'] }}"
+          register: t_elasticsearch_certificate_transport
+
+      when:
+        - elasticsearch_certificate_transport|d(none)
+        - elasticsearch_certificate_transport_ca|d(none)
+
+
+    - block:
+
+        - name: deploy elasticsearch http certificate
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            owner: "{{ elasticsearch_user }}"
+            group: "{{ elasticsearch_group }}"
+            mode: "0400"
+          loop:
+            - dest: "{{ elasticsearch_config_http_cert }}"
+              content: "{{ elasticsearch_certificate_http['certificate'] }}"
+            - dest: "{{ elasticsearch_config_http_key }}"
+              content: "{{ elasticsearch_certificate_http['key'] }}"
+            - dest: "{{ elasticsearch_config_http_ca_cert }}"
+              content: "{{ elasticsearch_certificate_http_ca['certificate'] }}"
+          register: t_elasticsearch_certificate_http
+
+      when:
+        - elasticsearch_certificate_http is defined
+        - elasticsearch_certificate_http is not none
+        - elasticsearch_certificate_http_ca is defined
+        - elasticsearch_certificate_http_ca is not none
+
+
+  when: elasticsearch_ssl
+
+
+
+- name: set t_elasticsearch_certificate_update
+  set_fact:
+    t_elasticsearch_certificate_update: "{{ t_elasticsearch_certificate_transport.changed or t_elasticsearch_certificate_http.changed }}"

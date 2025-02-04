@@ -7,6 +7,7 @@ elasticsearch_config_security_dir: "{{ elasticsearch_config_dir }}/elasticsearch
 elasticsearch_data_dir: "{{ elasticsearch_base_dir }}/data"
 elasticsearch_logs_dir: "{{ elasticsearch_base_dir }}/logs"
 
+
 elasticsearch_directories:
   - path: "{{ elasticsearch_base_dir }}"
     owner: "{{ elasticsearch_admin_user }}"
@@ -50,6 +51,12 @@ elasticsearch_config_jvm_options: "{{ elasticsearch_config_dir }}/jvm.options"
 elasticsearch_config_log4j2_properties: "{{ elasticsearch_config_dir }}/log4j2.properties"
 elasticsearch_config_elasticsearch_yml: "{{ elasticsearch_config_dir }}/elasticsearch.yml"
 
+elasticsearch_config_http_cert: "{{ elasticsearch_config_certs_dir }}/http.crt"
+elasticsearch_config_http_key: "{{ elasticsearch_config_certs_dir }}/http.key"
+elasticsearch_config_http_ca_cert: "{{ elasticsearch_config_certs_dir }}/http.ca.crt"
+elasticsearch_config_transport_cert: "{{ elasticsearch_config_certs_dir }}/transport.crt"
+elasticsearch_config_transport_key: "{{ elasticsearch_config_certs_dir }}/transport.key"
+elasticsearch_config_transport_ca_cert: "{{ elasticsearch_config_certs_dir }}/transport.ca.crt"
 
 elasticsearch_conf_jvm_xms: 4g
 elasticsearch_conf_jvm_xmx: 4g
@@ -72,7 +79,20 @@ elasticsearch_conf_transport_port: 9300
 elasticsearch_conf_discovery_type: single-node
 elasticsearch_conf_discovery_seed_hosts: ["127.0.0.1", "[::1]", "{{ ansible_fqdn }}"]
 elasticsearch_conf_cluster_initial_master_nodes: [ "{{ ansible_fqdn }}" ]
+
 elasticsearch_conf_xpack_enabled: true
+elasticsearch_conf_xpack_transport_ssl_enabled: "{{ elasticsearch_ssl }}"
+elasticsearch_conf_xpack_http_ssl_enabled: "{{ elasticsearch_ssl }}"
+
+elasticsearch_conf_transport_ssl_verification_mode: full  # certificate
+elasticsearch_conf_transport_ssl_key: "{{ elasticsearch_config_transport_key | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_transport_ssl_certificate: "{{ elasticsearch_config_transport_cert | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_transport_ssl_certificate_authority: "{{ elasticsearch_config_transport_ca_cert | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_transport_ssl_supported_protocols: ["TLSv1.2", "TLSv1.3"]
+elasticsearch_conf_http_ssl_key: "{{ elasticsearch_config_http_key | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_http_ssl_certificate: "{{ elasticsearch_config_http_cert | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_http_ssl_certificate_authority: "{{ elasticsearch_config_http_ca_cert | regex_replace('^' + elasticsearch_config_dir + '/', '') }}"
+elasticsearch_conf_http_ssl_supported_protocols: ["TLSv1.2", "TLSv1.3"]
 
 elasticsearch_conf_elasticsearch_yml_settings:
   - { name: "cluster.name", value: "{{ elasticsearch_cluster_name }}" }
@@ -90,8 +110,17 @@ elasticsearch_conf_elasticsearch_yml_settings:
   - { name: "discovery.seed_hosts", value: "{{ elasticsearch_conf_discovery_seed_hosts }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
   - { name: "cluster.initial_master_nodes", value: "{{ elasticsearch_conf_cluster_initial_master_nodes }}", state: "{{ ((elasticsearch_conf_discovery_type|d('')) == 'single-node') | ternary('absent', 'present') }}" }
   - { name: "xpack.security.enabled", value: "{{ elasticsearch_conf_xpack_enabled | ternary('true', 'false') }}" }
-  - { name: "xpack.security.transport.ssl.enabled", value: "{{ elasticsearch_conf_xpack_enabled | ternary('true', 'false') }}" }
-  - { name: "xpack.security.http.ssl.enabled", value: "{{ (elasticsearch_conf_xpack_enabled and elasticsearch_ssl) | ternary('true', 'false') }}" }
+  - { name: "xpack.security.transport.ssl.enabled", value: "{{ elasticsearch_conf_xpack_transport_ssl_enabled | ternary('true', 'false') }}" }
+  - { name: "xpack.security.transport.ssl.verification_mode", value: "{{ elasticsearch_conf_transport_ssl_verification_mode }}", state: "{{ elasticsearch_conf_xpack_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.transport.ssl.key", value: "{{ elasticsearch_conf_transport_ssl_key }}", state: "{{ elasticsearch_conf_xpack_transport_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.transport.ssl.certificate", value: "{{ elasticsearch_conf_transport_ssl_certificate }}", state: "{{ elasticsearch_conf_xpack_transport_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.transport.ssl.certificate_authorities", value: [ "{{ elasticsearch_conf_transport_ssl_certificate_authority }}" ], state: "{{ elasticsearch_conf_xpack_transport_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.transport.ssl.supported_protocols", value: "{{ elasticsearch_conf_transport_ssl_supported_protocols }}", state: "{{ elasticsearch_conf_xpack_transport_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.http.ssl.enabled", value: "{{ elasticsearch_conf_xpack_http_ssl_enabled | ternary('true', 'false') }}" }
+  - { name: "xpack.security.http.ssl.key", value: "{{ elasticsearch_conf_http_ssl_key }}", state: "{{ elasticsearch_conf_xpack_http_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.http.ssl.certificate", value: "{{ elasticsearch_conf_http_ssl_certificate }}", state: "{{ elasticsearch_conf_xpack_http_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.http.ssl.certificate_authorities", value: [ "{{ elasticsearch_conf_http_ssl_certificate_authority }}" ], state: "{{ elasticsearch_conf_xpack_http_ssl_enabled | ternary('present', 'absent') }}" }
+  - { name: "xpack.security.http.ssl.supported_protocols", value: "{{ elasticsearch_conf_http_ssl_supported_protocols }}", state: "{{ elasticsearch_conf_xpack_http_ssl_enabled | ternary('present', 'absent') }}" }
 
 elasticsearch_conf_jvm_options_settings:
   - { name: xms, regexp: '^-Xms[0-9]+[gGmM]?$', line: '-Xms{{ elasticsearch_conf_jvm_xms }}' }

@@ -1,1 +1,57 @@
 ---
+
+- block:
+
+    - block:
+
+        - name: deploy elasticsearch CA certificate
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            owner: "{{ kibana_user }}"
+            group: "{{ kibana_group }}"
+            mode: "0400"
+          loop:
+            - dest: "{{ kibana_config_elasticsearch_ca_cert }}"
+              content: "{{ elasticsearch_certificate_http_ca['certificate'] }}"
+          register: t_kibana_certificate_elasticsearch_ca
+
+      when:
+        - elasticsearch_certificate_http_ca is defined
+        - elasticsearch_certificate_http_ca is not none
+
+
+  when: elasticsearch_ssl
+
+
+
+- block:
+
+    - block:
+
+        - name: deploy kibana server certificate
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            owner: "{{ kibana_user }}"
+            group: "{{ kibana_group }}"
+            mode: "0400"
+          loop:
+            - dest: "{{ kibana_config_server_cert }}"
+              content: "{{ kibana_certificate_server['certificate'] }}"
+            - dest: "{{ kibana_config_server_key }}"
+              content: "{{ kibana_certificate_server['key'] }}"
+          register: t_kibana_certificate_server
+
+      when:
+        - kibana_certificate_server is defined
+        - kibana_certificate_server is not none
+
+
+  when: kibana_ssl
+
+
+
+- name: set t_kibana_certificate_update
+  set_fact:
+    t_kibana_certificate_update: "{{ t_kibana_certificate_elasticsearch_ca.changed or t_kibana_certificate_server.changed }}"

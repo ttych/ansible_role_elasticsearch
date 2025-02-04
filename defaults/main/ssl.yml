@@ -2,4 +2,7 @@
 
 elasticsearch_ssl: yes
 kibana_ssl: "{{ elasticsearch_ssl }}"
+
+
+
 elasticsearch_ssl_use_self_signed: no
