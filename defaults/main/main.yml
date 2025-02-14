@@ -6,7 +6,7 @@ want_kibana: "{{ want_elasticsearch }}"
 elasticsearch_name: elasticsearch
 elasticsearch_dir: "/app/{{ elasticsearch_name }}"
 
-elasticsearch_cluster_name: local
+elasticsearch_cluster_name: "elasticsearch-1"
 
 elasticsearch_security_node: no
 
