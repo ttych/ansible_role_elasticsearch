@@ -49,6 +49,8 @@ kibana_config_server_key: "{{ kibana_config_certs_dir }}/server.key"
 kibana_config_elasticsearch_ca_cert: "{{ kibana_config_certs_dir }}/elasticsearch.ca.crt"
 
 kibana_conf_scheme: "{{ kibana_ssl | ternary('https', 'http') }}"
+kibana_conf_service_fqdn: "kibana"
+kibana_conf_service_url: "{{ kibana_conf_scheme }}://{{ kibana_conf_service_fqdn }}:{{ kibana_conf_server_port }}"
 kibana_conf_node_fqdn: "{{ ansible_fqdn }}"
 kibana_conf_server_host: 0.0.0.0
 kibana_conf_server_port: 5601
@@ -59,16 +61,19 @@ kibana_conf_server_name: "{{ kibana_conf_node_fqdn }}"
 kibana_conf_elasticsearch_hosts:
   - "{{ elasticsearch_conf_scheme }}://localhost:{{ elasticsearch_conf_http_port }}"
   - "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}"
+  - "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_service_fqdn }}:{{ elasticsearch_conf_http_port }}"
 kibana_conf_elasticsearch_username: kibana_system
 kibana_conf_elasticsearch_password: "{{ elasticsearch_user_kibana_system_password }}"
 kibana_conf_logging_root_level: info
 kibana_conf_i18n_locale: en
 kibana_conf_telemetry_optin: false
+kibana_conf_elasticsearch_public_base_url: "{{ elasticsearch_conf_service_url }}"
 kibana_conf_elasticsearch_ssl_enabled: "{{ elasticsearch_conf_xpack_http_ssl_enabled }}"
 kibana_conf_elasticsearch_ssl_supported_protocols: "{{ elasticsearch_conf_http_ssl_supported_protocols }}"
 # kibana_conf_elasticsearch_ssl_certificate_authority: "{{ kibana_config_elasticsearch_ca_cert | regex_replace('^' + kibana_config_dir + '/', '') }}"
 kibana_conf_elasticsearch_ssl_certificate_authority: "{{ kibana_config_elasticsearch_ca_cert }}"
 kibana_conf_elasticsearch_ssl_verification_mode: full  # certificate
+kibana_conf_server_public_base_url: "{{ kibana_conf_service_url }}"
 kibana_conf_server_ssl_enabled: "{{ kibana_ssl }}"
 # kibana_conf_server_ssl_certificate: "{{ kibana_config_server_cert | regex_replace('^' + kibana_config_dir + '/', '') }}"
 kibana_conf_server_ssl_certificate: "{{ kibana_config_server_cert }}"
@@ -78,6 +83,7 @@ kibana_conf_server_ssl_key: "{{ kibana_config_server_key }}"
 kibana_conf_kibana_yml_settings:
   - { name: "server.port", value: "{{ kibana_conf_server_port }}" }
   - { name: "server.host", value: "{{ kibana_conf_server_host }}" }
+  - { name: "server.publicBaseUrl", value: "{{ kibana_conf_server_public_base_url }}" }
   - { name: "server.basePath", value: "\"{{ kibana_conf_server_basePath }}\"", state: "{{ (kibana_conf_server_basePath == '') | ternary('absent', 'present') }}" }
   - { name: "server.rewriteBasePath", value: "{{ kibana_conf_server_rewriteBasePath | ternary('true', 'false') }}" }
   - { name: "server.maxPayloadBytes", value: "{{ kibana_conf_server_maxPayloadBytes }}" }
@@ -90,6 +96,7 @@ kibana_conf_kibana_yml_settings:
   - { name: "path.data", value: "{{ kibana_data_dir }}" }
   - { name: "i18n.locale", value: "{{ kibana_conf_i18n_locale }}" }
   - { name: "telemetry.optIn", value: "{{ kibana_conf_telemetry_optin | ternary('true', 'false') }}" }
+  - { name: "elasticsearch.publicBaseUrl", value: "{{ kibana_conf_elasticsearch_public_base_url }}" }
   # - { name: "elasticsearch.ssl.enabled", value: "{{ kibana_conf_elasticsearch_ssl_enabled | ternary('true', 'false') }}" }
   # - { name: "elasticsearch.ssl.supportedProtocols", value: "{{ kibana_conf_elasticsearch_ssl_supported_protocols }}", state: "{{ kibana_conf_elasticsearch_ssl_enabled | ternary('present', 'absent') }}" }
   - { name: "elasticsearch.ssl.certificateAuthorities", value: [ "{{ kibana_conf_elasticsearch_ssl_certificate_authority }}" ], state: "{{ kibana_conf_elasticsearch_ssl_enabled | ternary('present', 'absent') }}" }

@@ -10,4 +10,4 @@ elasticsearch_cluster_name: "elasticsearch-1"
 
 elasticsearch_security_node: no
 
-elasticsearch_version: 8.17.1
+elasticsearch_version: 8.17.2

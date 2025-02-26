@@ -11,7 +11,7 @@
 
         - name: init builtin users
           shell:
-            cmd: "echo 'y' | {{ elasticsearch_dist_active }}/bin/elasticsearch-setup-passwords auto --batch"
+            cmd: "echo 'y' | {{ elasticsearch_dist_active }}/bin/elasticsearch-setup-passwords auto --batch --url '{{ elasticsearch_conf_scheme }}://{{ (elasticsearch_conf_node_fqdn == ansible_fqdn) | ternary('localhost', elasticsearch_conf_node_fqdn) }}:{{ elasticsearch_conf_http_port }}'"
           environment:
             ES_PATH_CONF: "{{ elasticsearch_config_dir }}"
           register: t_elasticsearch_builtin_users_init_content

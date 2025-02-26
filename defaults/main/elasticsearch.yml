@@ -63,22 +63,25 @@ elasticsearch_conf_jvm_xmx: 4g
 elasticsearch_conf_jvm_heap_dump_on_out_of_memory_error: false
 
 elasticsearch_conf_scheme: "{{ elasticsearch_ssl | ternary('https', 'http') }}"
-elasticsearch_conf_node_name: "{{ ansible_fqdn }}"
+elasticsearch_conf_service_fqdn: "elasticsearch"
+elasticsearch_conf_service_url: "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_service_fqdn }}:{{ elasticsearch_conf_http_port }}"
 elasticsearch_conf_node_fqdn: "{{ ansible_fqdn }}"
+elasticsearch_conf_node_name: "{{ elasticsearch_conf_node_fqdn.split('.')[0] }}"
+elasticsearch_conf_listen: "localhost"
 elasticsearch_conf_node_roles:
   - master
   - data
   - ingest
   - transform
 elasticsearch_conf_bootstrap_memory_lock: true
-elasticsearch_conf_network_host: "{{ elasticsearch_conf_node_fqdn }}"
+elasticsearch_conf_network_host: "{{ elasticsearch_conf_listen }}"
 elasticsearch_conf_http_host: 0.0.0.0
 elasticsearch_conf_http_port: 9200
 elasticsearch_conf_transport_host: "{{ (elasticsearch_conf_discovery_type == 'single-node') | ternary('127.0.0.1', '0.0.0.0') }}"
 elasticsearch_conf_transport_port: 9300
 elasticsearch_conf_discovery_type: single-node
-elasticsearch_conf_discovery_seed_hosts: ["127.0.0.1", "[::1]", "{{ ansible_fqdn }}"]
-elasticsearch_conf_cluster_initial_master_nodes: [ "{{ ansible_fqdn }}" ]
+elasticsearch_conf_discovery_seed_hosts: ["127.0.0.1", "[::1]", "{{ elasticsearch_conf_node_fqdn }}"]
+elasticsearch_conf_cluster_initial_master_nodes: [ "{{ elasticsearch_conf_node_fqdn }}" ]
 
 elasticsearch_conf_xpack_enabled: true
 elasticsearch_conf_xpack_transport_ssl_enabled: "{{ elasticsearch_ssl }}"

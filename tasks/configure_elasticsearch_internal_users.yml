@@ -4,7 +4,7 @@
 
     - name: ensure elasticsearch internal roles
       ansible.builtin.uri:
-        url: "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}/_security/role/{{ item.name }}"
+        url: "{{ elasticsearch_conf_scheme }}://{{ (elasticsearch_conf_node_fqdn == ansible_fqdn) | ternary('localhost', elasticsearch_conf_node_fqdn) }}:{{ elasticsearch_conf_http_port }}/_security/role/{{ item.name }}"
         method: put
         body: "{{ item.body | to_json }}"
         user: "elastic"
@@ -19,7 +19,7 @@
 
     - name: ensure elasticsearch internal users
       ansible.builtin.uri:
-        url: "{{ elasticsearch_conf_scheme }}://{{ elasticsearch_conf_node_fqdn }}:{{ elasticsearch_conf_http_port }}/_security/user/{{ item.username }}"
+        url: "{{ elasticsearch_conf_scheme }}://{{ (elasticsearch_conf_node_fqdn == ansible_fqdn) | ternary('localhost', elasticsearch_conf_node_fqdn) }}:{{ elasticsearch_conf_http_port }}/_security/user/{{ item.username }}"
         method: put
         body: "{{ item.body | to_json }}"
         user: "elastic"
